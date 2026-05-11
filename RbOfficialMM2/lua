@@ -1,0 +1,658 @@
+repeat
+    task.wait()
+until game:IsLoaded()
+
+-- ==================== UNIFIED SERVICE DECLARATIONS ====================
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local StarterGui = game:GetService("StarterGui")
+local Camera = Workspace.CurrentCamera
+local TextChatService = game:GetService("TextChatService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+local TeleportService = game:GetService("TeleportService")
+
+local cloneref = (cloneref or clonereference or function(i) return i end)
+
+-- ==================== THEME SETUP ====================
+WindUI:AddTheme({
+    ["Name"] = "Dark",
+    ["Accent"] = "#18181b",
+    ["Dialog"] = "#18181b",
+    ["Outline"] = "#FFFFFF",
+    ["Text"] = "#FFFFFF",
+    ["Placeholder"] = "#999999",
+    ["Background"] = "#0e0e10",
+    ["Button"] = "#52525b",
+    ["Icon"] = "#a1a1aa"
+})
+
+WindUI:AddTheme({
+    ["Name"] = "Light",
+    ["Accent"] = "#f4f4f5",
+    ["Dialog"] = "#f4f4f5",
+    ["Outline"] = "#000000",
+    ["Text"] = "#000000",
+    ["Placeholder"] = "#666666",
+    ["Background"] = "#ffffff",
+    ["Button"] = "#e4e4e7",
+    ["Icon"] = "#52525b"
+})
+
+WindUI:AddTheme({
+    ["Name"] = "Gray",
+    ["Accent"] = "#374151",
+    ["Dialog"] = "#374151",
+    ["Outline"] = "#d1d5db",
+    ["Text"] = "#f9fafb",
+    ["Placeholder"] = "#9ca3af",
+    ["Background"] = "#1f2937",
+    ["Button"] = "#4b5563",
+    ["Icon"] = "#d1d5db"
+})
+
+WindUI:AddTheme({
+    ["Name"] = "Blue",
+    ["Accent"] = "#1e40af",
+    ["Dialog"] = "#1e3a8a",
+    ["Outline"] = "#93c5fd",
+    ["Text"] = "#f0f9ff",
+    ["Placeholder"] = "#60a5fa",
+    ["Background"] = "#1e293b",
+    ["Button"] = "#3b82f6",
+    ["Icon"] = "#93c5fd"
+})
+
+WindUI:AddTheme({
+    ["Name"] = "Green",
+    ["Accent"] = "#059669",
+    ["Dialog"] = "#047857",
+    ["Outline"] = "#6ee7b7",
+    ["Text"] = "#ecfdf5",
+    ["Placeholder"] = "#34d399",
+    ["Background"] = "#064e3b",
+    ["Button"] = "#10b981",
+    ["Icon"] = "#6ee7b7"
+})
+
+WindUI:AddTheme({
+    ["Name"] = "Purple",
+    ["Accent"] = "#7c3aed",
+    ["Dialog"] = "#6d28d9",
+    ["Outline"] = "#c4b5fd",
+    ["Text"] = "#faf5ff",
+    ["Placeholder"] = "#a78bfa",
+    ["Background"] = "#581c87",
+    ["Button"] = "#8b5cf6",
+    ["Icon"] = "#c4b5fd"
+})
+
+WindUI:SetNotificationLower(true)
+
+-- ==================== NEXORA NOTIFICATION LOADER ====================
+local function LoadNexora()
+    local url = "https://raw.githubusercontent.com/UniversalScripter1/ProjectNexora/refs/heads/main/Notification"
+    local success, result = pcall(function()
+        return game:HttpGet(url)
+    end)
+    if success and result and result ~= "" then
+        local func, err = loadstring(result)
+        if func then
+            return func()
+        else
+            warn("Nexora Loader: Syntax Error in External Script - " .. tostring(err))
+        end
+    else
+        warn("Nexora Loader: Connection Error. Could not fetch from GitHub.")
+    end
+    return nil
+end
+
+local notif = LoadNexora()
+
+local function ExtractAssetId(icon)
+    if not icon then return nil end
+    if type(icon) == "number" then return icon end
+    local s = tostring(icon)
+    local id = s:match("(%d+)")
+    return tonumber(id)
+end
+
+local function SendNexoraNotification(title, text, duration, icon)
+    duration = duration or 5
+    if notif and type(notif.Notification) == "function" then
+        local iconId = ExtractAssetId(icon) or 54952350
+        local ok, _ = pcall(function()
+notif:Notification(
+                title or "Project Nexora",
+                text or "",
+                "GothamBold",
+                "Gotham",
+                duration,
+                iconId,
+                nil,
+                "light"
+            )
+        end)
+        if not ok then
+            StarterGui:SetCore("SendNotification", {
+                ["Title"] = title or "Project Nexora",
+                ["Text"] = text or "",
+                ["Duration"] = duration,
+                ["Icon"] = icon or "rbxassetid://89804924525665"
+            })
+        end
+    else
+        StarterGui:SetCore("SendNotification", {
+            ["Title"] = title or "Eliana Hub",
+            ["Text"] = text or "",
+            ["Duration"] = duration,
+            ["Icon"] = icon or "rbxassetid://89804924525665"
+        })
+    end
+end
+
+-- ==================== THEME MANAGEMENT ====================
+local ThemesList = {
+    "Dark",
+    "Light",
+    "Gray",
+    "Blue",
+    "Green",
+    "Purple"
+}
+
+local CurrentThemeIndex = 1
+
+if not getgenv().TransparencyEnabled then
+    getgenv().TransparencyEnabled = false
+end
+
+SendNexoraNotification("Eliana Hub", "Toggle Keybind: ( R )", 30, "rbxassetid://89804924525665")
+
+local MainWindow = WindUI:CreateWindow({
+    ["Title"] = "Eliana Hub",
+    ["Icon"] = "zap",
+    ["Author"] = "OP KEYLESS",
+    ["Folder"] = "Project Nexora",
+    ["Size"] = UDim2.fromOffset(500, 350),
+    ["Transparent"] = getgenv().TransparencyEnabled,
+    ["Theme"] = "Purple",
+    ["Resizable"] = true,
+    ["SideBarWidth"] = 150,
+    ["BackgroundImageTransparency"] = 0.8,
+    ["HideSearchBar"] = false,
+    ["ScrollBarEnabled"] = true,
+    ["User"] = {
+        ["Enabled"] = false,
+        ["Anonymous"] = false,
+        ["Callback"] = function()
+            CurrentThemeIndex = CurrentThemeIndex + 1
+            if CurrentThemeIndex > #ThemesList then
+                CurrentThemeIndex = 1
+            end
+            local NewTheme = ThemesList[CurrentThemeIndex]
+            WindUI:SetTheme(NewTheme)
+            WindUI:Notify({
+                ["Title"] = "Theme Changed",
+                ["Content"] = "Switched to " .. NewTheme .. " theme!",
+                ["Duration"] = 2,
+                ["Icon"] = "palette"
+            })
+        end
+    }
+})
+
+getgenv().TransparencyEnabled = true
+
+pcall(function()
+    MainWindow:ToggleTransparency(true)
+end)
+
+function getMap()
+    for _, Child in ipairs(Workspace:GetChildren()) do
+        if Child:FindFirstChild("CoinContainer") and Child:FindFirstChild("Spawns") then
+            return Child
+        end
+    end
+    return nil
+end
+
+loadstring(game:HttpGet("https://pastefy.app/hcVkWhQF/raw"))()
+
+MainWindow:EditOpenButton({
+    ["Title"] = "Eliana Hub",
+    ["CornerRadius"] = UDim.new(0, 6),
+    ["StrokeThickness"] = 2,
+    ["Color"] = ColorSequence.new(Color3.fromRGB(30, 30, 30), Color3.fromRGB(255, 255, 255)),
+    ["Draggable"] = true
+})
+
+MainWindow.ToggleKey = Enum.KeyCode.R
+
+local Tabs = {}
+
+Tabs.Main = MainWindow:Tab({
+    ["Title"] = "Main",
+    ["Icon"] = "eye",
+    ["Desc"] = "Eliana Hub"
+})
+
+Tabs.Misc = MainWindow:Tab({
+    ["Title"] = "Misc",
+    ["Icon"] = "sparkles",
+    ["Desc"] = "Eliana Hub"
+})
+
+Tabs.ESP = MainWindow:Tab({
+    ["Title"] = "ESP",
+    ["Icon"] = "eye",
+    ["Desc"] = "Eliana Hub"
+})
+
+Tabs.Farm = MainWindow:Tab({
+    ["Title"] = "Farm",
+    ["Icon"] = "wrench",
+    ["Desc"] = "Eliana Hub"
+})
+
+Tabs.Place = MainWindow:Tab({
+    ["Title"] = "Teleport",
+    ["Icon"] = "map",
+    ["Desc"] = "Eliana Hub"
+})
+
+Tabs.Fling = MainWindow:Tab({
+    ["Title"] = "Fling",
+    ["Icon"] = "user",
+    ["Desc"] = "Eliana Hub"
+})
+
+Tabs.Info = MainWindow:Tab({
+    ["Title"] = "Information",
+    ["Icon"] = "badge-info",
+    ["Desc"] = "Eliana Hub"
+})
+
+Tabs.Manager = MainWindow:Tab({
+    ["Title"] = "Quick Buttons",
+    ["Icon"] = "solar:widget-bold",
+    ["Desc"] = "Eliana Hub"
+})
+
+MainWindow:SelectTab(7)
+-- ==================== MANAGER TAB SETUP (from beta) ====================
+local SAVE_FILE = "ZCNathan_Layout_V31.json"
+local CreatedButtons = {}
+local EditMode = false
+local SelectedButton = nil
+local MASTER_VIOLET = Color3.fromRGB(138, 43, 226)
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ZCNathan_SelectionGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = cloneref(LocalPlayer:WaitForChild("PlayerGui"))
+
+local EditLabel = Instance.new("TextLabel")
+EditLabel.Name = "EditStatusLabel"
+EditLabel.Size = UDim2.new(0, 500, 0, 50)
+EditLabel.Position = UDim2.new(0.5, 0, 0.4, 0)
+EditLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+EditLabel.BackgroundTransparency = 1
+EditLabel.Visible = false
+EditLabel.Font = Enum.Font.GothamBold
+EditLabel.TextColor3 = MASTER_VIOLET
+EditLabel.TextSize = 22
+EditLabel.TextStrokeTransparency = 0.5
+EditLabel.Parent = screenGui
+
+local function UpdateEditLabel()
+    if EditMode and SelectedButton then
+        EditLabel.Text = string.format("EDITING: %s", string.upper(SelectedButton.Name))
+        EditLabel.Visible = true
+    else
+        EditLabel.Visible = false
+    end
+end
+
+local function makeDraggable(gui)
+    local dragging, dragInput, dragStart, startPos
+    gui.InputBegan:Connect(function(input)
+        if not EditMode then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if SelectedButton and SelectedButton ~= gui then
+                SelectedButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            end
+            SelectedButton = gui
+            gui.BackgroundColor3 = MASTER_VIOLET 
+            UpdateEditLabel()
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    gui.InputChanged:Connect(function(input)
+        if not EditMode then return end
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+local function SaveConfig()
+    local fullData = {}
+    for _, btn in ipairs(CreatedButtons) do
+        local corner = btn.UICorner.CornerRadius
+        fullData[btn.Name] = {
+            PosX_Scale = btn.Position.X.Scale,   PosX_Offset = btn.Position.X.Offset,
+            PosY_Scale = btn.Position.Y.Scale,   PosY_Offset = btn.Position.Y.Offset,
+            SizeX = btn.Size.X.Offset,
+            SizeY = btn.Size.Y.Offset,
+            Transparency = btn.BackgroundTransparency,
+            CornerScale = corner.Scale,
+            CornerOffset = corner.Offset,
+        }
+    end
+    writefile(SAVE_FILE, HttpService:JSONEncode(fullData))
+    WindUI:Notify({Title = "Saved", Content = "Layout saved!", Icon = "check"})
+end
+
+local function LoadConfig()
+    if isfile(SAVE_FILE) then
+        local success, data = pcall(function() return HttpService:JSONDecode(readfile(SAVE_FILE)) end)
+        if success then
+            for _, btn in ipairs(CreatedButtons) do
+                if data[btn.Name] then
+                    local d = data[btn.Name]
+                    btn.Position = UDim2.new(d.PosX_Scale, d.PosX_Offset, d.PosY_Scale, d.PosY_Offset)
+                    btn.Size = UDim2.fromOffset(d.SizeX, d.SizeY)
+                    btn.BackgroundTransparency = d.Transparency
+btn.TextTransparency = d.Transparency
+                    btn.UIStroke.Transparency = d.Transparency
+                    btn.UICorner.CornerRadius = UDim.new(d.CornerScale or 1, d.CornerOffset or 0)
+                end
+            end
+        end
+    end
+end
+
+local function createShape(name, pos, text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Name = name
+    btn.Size = UDim2.fromOffset(70, 70)
+    btn.Position = pos
+    btn.AnchorPoint = Vector2.new(0.5, 0.5)
+    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    btn.BackgroundTransparency = 0.4
+    btn.Visible = false
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamMedium
+    btn.TextScaled = true
+    btn.Parent = screenGui
+
+    local uc = Instance.new("UICorner", btn)
+    uc.CornerRadius = UDim.new(1, 0)
+
+    local st = Instance.new("UIStroke", btn)
+    st.Thickness = 3
+    st.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    st.Color = Color3.fromRGB(255, 255, 255)
+
+    local gradient = Instance.new("UIGradient", st)
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, MASTER_VIOLET),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, MASTER_VIOLET)
+    })
+
+    RunService.RenderStepped:Connect(function(dt)
+        gradient.Rotation = (gradient.Rotation + (180 * dt)) % 360
+    end)
+
+    btn.MouseButton1Click:Connect(function()
+        if not EditMode then callback() end
+    end)
+
+    makeDraggable(btn)
+    table.insert(CreatedButtons, btn)
+    return btn
+end
+
+-- Shoot Function
+createShape(
+    "Shoot_Btn",
+    UDim2.new(0.4, 0, 0.4, 0),
+    "SHOOT",
+    function()
+
+        local Character = LocalPlayer.Character
+        local Backpack = LocalPlayer:FindFirstChild("Backpack")
+        if not Character or not Backpack then return end
+
+        local Gun = Backpack:FindFirstChild("Gun") or Character:FindFirstChild("Gun")
+        if not Gun then return end
+
+        local Murderer = nil
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character then
+                if plr.Backpack:FindFirstChild("Knife")
+                or plr.Character:FindFirstChild("Knife") then
+                    Murderer = plr
+                    break
+                end
+            end
+        end
+        if not Murderer or not Murderer.Character then return end
+
+        local MyRoot = Character:FindFirstChild("HumanoidRootPart")
+        local TargetRoot = Murderer.Character:FindFirstChild("HumanoidRootPart")
+        local ShootRemote = Gun:FindFirstChild("Shoot")
+        if not (MyRoot and TargetRoot and ShootRemote) then return end
+
+        Gun.Parent = Character
+        task.wait()
+
+        local PredictedPos =
+            TargetRoot.CFrame + (TargetRoot.Velocity * 0.125)
+
+        ShootRemote:FireServer(MyRoot.CFrame, PredictedPos)
+
+        task.wait()
+        Gun.Parent = Backpack
+
+    end
+)
+
+-- Aimbot for ZCNathan
+local AimbotActive = false
+local AimbotConnection = nil
+local PredictionFactor = 0.125
+
+local function GetBestTorsoTarget()
+    local target = nil
+    local shortest = math.huge
+    local screenCenter = Camera.ViewportSize / 2
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local torso = player.Character:FindFirstChild("UpperTorso")
+                or player.Character:FindFirstChild("HumanoidRootPart")
+
+            if torso then
+                local pos, onScreen = Camera:WorldToViewportPoint(torso.Position)
+                if onScreen then
+                    local dist = (Vector2.new(pos.X, pos.Y) - screenCenter).Magnitude
+                    if dist < shortest then
+                        shortest = dist
+                        target = torso
+                    end
+                end
+            end
+        end
+    end
+
+    return target
+end
+
+local function StartAimbot()
+    if AimbotConnection then AimbotConnection:Disconnect() end
+AimbotConnection = RunService.RenderStepped:Connect(function()
+        if not AimbotActive then return end
+
+        local target = GetBestTorsoTarget()
+        if target then
+            local velocity = target.AssemblyLinearVelocity or target.Velocity
+            local predictedPos = target.Position + (velocity * PredictionFactor)
+
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, predictedPos)
+        end
+    end)
+end
+
+-- X-Ray Toggle
+local XRayEnabled = false
+
+
+-- Aimbot Button
+createShape(
+    "Aim_Btn",
+    UDim2.new(0.5, 0, 0.85, 0),
+    "AIM",
+    function()
+        AimbotActive = not AimbotActive
+
+        if AimbotActive then
+            StartAimbot()
+            WindUI:Notify({
+                Title = "AIMBOT",
+                Content = "Enabled",
+                Icon = "target"
+            })
+        else
+            if AimbotConnection then
+                AimbotConnection:Disconnect()
+                AimbotConnection = nil
+            end
+
+            WindUI:Notify({
+                Title = "AIMBOT",
+                Content = "Disabled",
+                Icon = "target"
+            })
+        end
+    end
+)
+
+
+-- Run Button
+createShape(
+    "Run_Btn",
+    UDim2.new(0.5, 0, 0.7, 0),
+    "RUN",
+    function()
+        local character = LocalPlayer.Character
+        if character and character:FindFirstChild("Humanoid") then
+            local humanoid = character.Humanoid
+            humanoid.WalkSpeed = humanoid.WalkSpeed + 9
+
+            WindUI:Notify({
+                Title = "RUN",
+                Content = "Speed Activated",
+                Icon = "run"
+            })
+
+            task.delay(5, function()
+                if humanoid and humanoid.Parent then
+                    humanoid.WalkSpeed = humanoid.WalkSpeed - 9
+                    WindUI:Notify({
+                        Title = "RUN",
+                        Content = "Speed reverted",
+                        Icon = "run"
+                    })
+                end
+            end)
+        end
+    end
+)
+-- ==================== NINJA STEP (REGISTER OPTIMIZED) ====================
+-- Wrapping in a 'do' block prevents the "out of registers" error
+do
+    local NinjaEnabled = false
+    local NinjaCooldown = 22
+    local NinjaOnCooldown = false
+    local NinjaAirLock = false
+
+    local function getTool(char)
+        return char:FindFirstChild("FakeBomb") or LocalPlayer.Backpack:FindFirstChild("FakeBomb")
+    end
+
+    local function dropBombAndBounce(char)
+        if NinjaOnCooldown then return end
+        local hum = char:FindFirstChild("Humanoid")
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local tool = getTool(char)
+
+        if not (hum and hrp and tool) then return end
+
+        if tool.Parent ~= char then tool.Parent = char end
+        task.wait(0.05)
+
+        local rem = tool:FindFirstChild("Remote")
+        if rem then
+            local down = CFrame.lookAt(hrp.Position, hrp.Position - Vector3.new(0, 50, 0))
+            rem:FireServer(down, 50)
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            
+            NinjaOnCooldown = true
+            task.delay(NinjaCooldown, function() NinjaOnCooldown = false end)
+        end
+    end
+
+    local function setupNinja(char)
+        local hum = char:WaitForChild("Humanoid")
+        local hrp = char:WaitForChild("HumanoidRootPart")
+
+        RunService.Heartbeat:Connect(function()
+            if not NinjaEnabled or NinjaOnCooldown then return end
+            if hum.FloorMaterial == Enum.Material.Air then
+                if hrp.AssemblyLinearVelocity.Y < -2 then
+                    if not NinjaAirLock then
+                        NinjaAirLock = true
+                        dropBombAndBounce(char)
+                    end
+                end
+            else
+                NinjaAirLock = false
+            end
+        end)
+    end
+
+    -- Character Init
+    if LocalPlayer.Character then task.spawn(setupNinja, LocalPlayer.Character) end
+    LocalPlayer.CharacterAdded:Connect(function(c) task.spawn(setupNinja, c) end)
+-- Create Quick Button
+    createShape(
+        "NinjaStep_Btn", 
+        UDim2.new(0.5, 0, 0.5, 0), 
+        "NINJA: OFF", 
+        function()
+            NinjaEnabled = not NinjaEnabled
+            
+            -- Safe update for the Hub's button list
+            for _, b in ipairs(CreatedButtons) do
+                if b.Name == "NinjaS
